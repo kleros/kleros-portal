@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalEnv": ["CI", "NODE_ENV", "MOCK_ATLAS_PORT"],
+  "globalPassThroughEnv": ["E2E_BASE_URL", "NODE_OPTIONS", "LANG", "E2E_MOCK_ATLAS_PORT", "E2E_APP_PORT"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "env": ["NEXT_PUBLIC_*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "format": {},
+    "format:check": {},
+    "test": {
+      "dependsOn": ["^test"],
+      "env": ["TZ"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    }
+  }
+}

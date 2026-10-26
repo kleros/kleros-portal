@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    # nightly full mutation run
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_PUBLIC_REOWN_PROJECT_ID: ci-placeholder
+  NEXT_PUBLIC_ATLAS_URI: http://127.0.0.1:4747
+
+jobs:
+  quality:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Format check
+        run: yarn format:check
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn check-types
+
+      - name: Unit tests
+        run: yarn test
+
+      - name: Coverage floors
+        run: yarn test:coverage
+
+  e2e:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Chromium
+        run: yarn workspace web playwright install --with-deps chromium
+
+      # Screenshot baselines are recorded on macOS and reviewed by a person; CI checks behaviour,
+      # layout geometry and accessibility.
+      - name: End-to-end tests
+        run: yarn test:e2e --grep-invert @screenshot
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  mutation:
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # Pull requests reuse the last result and test only changed mutants; the nightly run starts clean.
+      - uses: actions/cache@v4
+        if: github.event_name == 'pull_request'
+        with:
+          path: apps/web/reports/stryker-incremental.json
+          key: stryker-${{ github.base_ref }}-${{ github.sha }}
+          restore-keys: stryker-${{ github.base_ref }}-
+
+      - name: Mutation tests
+        run: yarn test:mutation ${{ github.event_name != 'pull_request' && '--force' || '' }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: apps/web/reports/mutation
+          retention-days: 14

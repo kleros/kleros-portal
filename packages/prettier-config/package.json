@@ -1,0 +1,16 @@
+{
+  "name": "@kleros-portal/prettier-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4"
+  },
+  "prettier": "./index.js",
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

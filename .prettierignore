@@ -1,0 +1,34 @@
+# Editor + lint-staged - do not list apps/ or packages/ here.
+
+# dependencies
+node_modules/
+.pnp.*
+.yarn/
+
+# build (repo-wide)
+**/.next/
+**/out/
+**/dist/
+**/.turbo/
+**/coverage/
+**/playwright-report/
+**/test-results/
+
+# generated / tool output
+**/generated/
+**/.envio/
+**/build/
+**/artifacts/
+**/cache/
+**/typechain-types/
+
+# hardhat-deploy output, generated per network (package .prettierignore alone does not
+# affect editor save). The *.viem.ts beside these are wagmi codegen and stay formatted.
+**/deployments/*/
+
+# locks
+yarn.lock
+*.tsbuildinfo
+
+# local
+.cursor/

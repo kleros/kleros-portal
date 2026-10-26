@@ -1,0 +1,39 @@
+{
+  "name": "@kleros-portal/mock-atlas",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local stand-in for Kleros Atlas: SIWE auth, the user/email lifecycle and per-product notification subscriptions, with test controls.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@kleros-portal/eslint-config": "workspace:*",
+    "@kleros-portal/prettier-config": "workspace:*",
+    "@kleros-portal/typescript-config": "workspace:*",
+    "@kleros/kleros-app": "^3.1.0",
+    "@types/node": "^22.15.30",
+    "eslint": "^9.28.0",
+    "prettier": "^3.7.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "jose": "^5.10.0",
+    "tsx": "^4.19.2",
+    "viem": "^2.55.4"
+  },
+  "prettier": "@kleros-portal/prettier-config",
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

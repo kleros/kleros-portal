@@ -1,0 +1,7 @@
+{
+  "extends": "@kleros-portal/typescript-config/node-library.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src", "eslint.config.mjs", "vitest.config.ts"]
+}

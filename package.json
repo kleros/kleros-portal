@@ -1,0 +1,45 @@
+{
+  "name": "kleros-portal",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "test:e2e": "yarn workspace web test:e2e",
+    "test:mutation": "yarn workspace web test:mutation",
+    "test:coverage": "yarn workspace web test:coverage",
+    "format": "prettier --write . --ignore-path .prettierignore.root && turbo run format",
+    "format:check": "sh -c 'prettier --check . --ignore-path .prettierignore.root; r1=$?; turbo run format:check --continue=always; r2=$?; exit $((r1 | r2))'",
+    "dev": "yarn turbo run dev --filter=web --filter=@kleros-portal/mock-atlas",
+    "mock-atlas": "yarn workspace @kleros-portal/mock-atlas start",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@kleros-portal/prettier-config": "workspace:*",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.7.4",
+    "turbo": "^2.7.1",
+    "typescript": "^5.8.3"
+  },
+  "prettier": "@kleros-portal/prettier-config",
+  "packageManager": "yarn@4.9.2",
+  "engines": {
+    "node": "22.23.4"
+  },
+  "resolutions": {
+    "@internationalized/date": "3.12.3"
+  },
+  "volta": {
+    "node": "22.23.4"
+  }
+}

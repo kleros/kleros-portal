@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "../../../../node_modules/@kleros/ui-components-library/dist/assets/theme.css";
+
+@source "../../../../node_modules/@kleros/ui-components-library";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Light theme: the library's set, with the colours that carry text darkened to reach 4.5:1;
+ * the stock values measure below it on white.
+ */
+:root:not(.dark) {
+  --klerosUIComponentsPrimaryBlue: #0072c6;
+  --klerosUIComponentsSecondaryBlue: #005fa6;
+  --klerosUIComponentsSecondaryText: #6b6b75;
+  --klerosUIComponentsError: #c4002b;
+  --klerosUIComponentsWarning: #b35f00;
+  --klerosUIComponentsSuccess: #00852a;
+}
+
+/*
+ * Dark theme: neutral greys in place of the library's purple dark set. Same token names, so
+ * every library component follows. Text pairs here measure at least 4.5:1 on both surfaces.
+ */
+:root.dark {
+  --klerosUIComponentsLightBackground: #0f0f11;
+  --klerosUIComponentsWhiteBackground: #17171a;
+  --klerosUIComponentsLightGrey: #1e1e22;
+  --klerosUIComponentsStroke: #31313a;
+  --klerosUIComponentsPrimaryText: #ececef;
+  --klerosUIComponentsSecondaryText: #9a9aa3;
+  --klerosUIComponentsMediumBlue: #0f1a25;
+  --klerosUIComponentsLightBlue: #12202d;
+  --klerosUIComponentsMediumPurple: #1e1e22;
+  --klerosUIComponentsLightPurple: #17171a;
+  --klerosUIComponentsTintPurple: #1a1a1f;
+  --klerosUIComponentsSuccessLight: #12241a;
+  --klerosUIComponentsWarningLight: #241d10;
+  --klerosUIComponentsErrorLight: #2a1418;
+  --klerosUIComponentsImageCheckerColor: #1e1e22;
+  --klerosUIComponentsDefaultShadow: #00000000;
+  --klerosUIComponentsHoveredShadow: #00000000;
+  --klerosUIComponentsSkeletonBackground: #1e1e22;
+  --klerosUIComponentsSkeletonHighlight: #26262b;
+}
+
+@theme inline {
+  --font-sans:
+    var(--font-inter, Inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--klerosUIComponentsLightBackground);
+  color: var(--klerosUIComponentsPrimaryText);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-spin {
+    animation: none;
+  }
+}

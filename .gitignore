@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnp.*
+.yarn/
+
+# env
+.env
+.env.*
+!.env*.example
+
+# build (repo-wide)
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# test / e2e
+**/test-results/
+**/playwright-report/
+**/.playwright-mcp/
+coverage/
+
+# misc
+.DS_Store
+*.log
+.turbo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# agent config: shared rules and skills are committed;
+# local settings and personal notes are not
+.claude/settings.local.json*
+packages/mock-atlas/.store/
+
+# mutation testing
+apps/web/reports/
+.stryker-tmp/

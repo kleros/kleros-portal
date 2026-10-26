@@ -1,0 +1,5 @@
+// Just a reference file to make it easier for IDE's to load relevant tsconfig when in workspaces
+{
+  "files": [],
+  "references": [{ "path": "./apps/web" }, { "path": "./packages/mock-atlas" }]
+}
