@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { groupTopics, humanise, productCopy, topicCopy } from "../copy";
+import { groupTopics, humanise, productCopy, sortProducts, topicCopy } from "../copy";
 
 // GraphQL enum member names from Atlas origin/master: packages/utils/src/notifications/notification-subscription.ts.
 // Expected labels/groups are the portal's user-facing contract, not derived through its copy helpers.
@@ -178,4 +178,49 @@ describe("groupTopics", () => {
       { id: "other", title: "Other", items: [{ topic: "JurorDraw" }, { topic: "Rewards" }] },
     ]);
   });
+});
+
+describe("sortProducts", () => {
+  it("puts known products in display order before unknown products in their original order", () => {
+    const entries = [
+      { product: "futureA", count: 9 },
+      { product: "PohV2", count: 3 },
+      { product: "CourtV1", count: 2 },
+      { product: "futureB", count: 8 },
+      { product: "Foresight", count: 4 },
+      { product: "CourtV2", count: 1 },
+    ];
+    expect(sortProducts(entries)).toEqual([
+      { product: "CourtV2", count: 1 },
+      { product: "CourtV1", count: 2 },
+      { product: "PohV2", count: 3 },
+      { product: "Foresight", count: 4 },
+      { product: "futureA", count: 9 },
+      { product: "futureB", count: 8 },
+    ]);
+    expect(entries.map(({ product }) => product)).toEqual([
+      "futureA",
+      "PohV2",
+      "CourtV1",
+      "futureB",
+      "Foresight",
+      "CourtV2",
+    ]);
+  });
+});
+
+it.each([
+  ["CourtV2", "JurorDraw", "Any court where you have PNK staked"],
+  ["CourtV2", "JurorCanCommit", "Courts with hidden votes, with a reminder a day before the period ends"],
+  ["CourtV2", "JurorCanVote", "With a reminder a day before voting closes"],
+  ["CourtV2", "JurorCanReveal", "Courts with hidden votes, with a reminder before the period ends"],
+  ["CourtV2", "DisputeAppealable", "Also sent to past jurors and appeal funders of that case"],
+  ["CourtV2", "StakeChanged", "Including when a court lowers it automatically"],
+  ["CourtV2", "StakeUnstaked", "Including forced unstaking for a low stake or inactivity"],
+  ["CourtV2", "CaseLost", "My vote did not match the final ruling"],
+  ["PohV2", "PendingRequest", "It can be challenged from here"],
+  ["PohV2", "VouchAdded", "On-chain vouches only"],
+  ["PohV2", "DisputeRuledTie", "A tie, or the court refused to arbitrate"],
+])("explains %s/%s with its delivery conditions", (product, topic, hint) => {
+  expect(topicCopy(product, topic).hint).toBe(hint);
 });

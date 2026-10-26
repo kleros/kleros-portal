@@ -414,3 +414,21 @@ it("switches an all-on Jury duty group off without touching Rulings", async () =
     },
   ]);
 });
+
+it("shows a plain sign-in message when the session ends before Turn off all", async () => {
+  serveSettings();
+  const view = renderSettings();
+  await screen.findByRole("navigation", { name: "Products" });
+  const atlas = testAtlas();
+  atlas.isVerified = false;
+  vi.mocked(useAtlasProvider).mockReturnValue(atlas);
+  view.rerender(<NotificationSettings noUser={null} header={null} dangerZone={null} />);
+  await userEvent.click(screen.getByRole("button", { name: "Turn off all" }));
+  expect(screen.getAllByRole("status").map((status) => status.textContent)).toEqual(["Changes save as you go", ""]);
+  await userEvent.click(screen.getByRole("button", { name: "Turn everything off" }));
+  expect(await screen.findByText("Sign in again to save changes.", SHOWN)).toBeVisible();
+  expect(screen.getAllByRole("status").map((status) => status.textContent)).toEqual([
+    "Changes save as you go",
+    "Sign in again to save changes.Retry",
+  ]);
+});

@@ -85,6 +85,8 @@ it("confirms exactly once under StrictMode, including rerenders during an outsta
     response.resolve(data({ confirmEmail: { isConfirmed: true, isTokenExpired: false, isTokenInvalid: false } })),
   );
   expect(await screen.findByRole("heading", { name: "Your email is confirmed" })).toBeVisible();
+  expect(screen.getByText("Kleros products can now email you. Choose what each one sends.")).toBeVisible();
+  expect(screen.getByRole("link", { name: "Choose notifications" })).not.toHaveAttribute("target");
   expect(screen.getByRole("link", { name: "Choose notifications" })).toHaveAttribute("href", "/notifications");
   expect(requests).toEqual([
     { operationName: "ConfirmEmail", variables: { address: ADDRESS, token: "confirmation-token" } },
@@ -92,12 +94,24 @@ it("confirms exactly once under StrictMode, including rerenders during an outsta
 });
 
 it.each([
-  [{ isConfirmed: false, isTokenExpired: true, isTokenInvalid: false }, "This link has expired"],
-  [{ isConfirmed: false, isTokenExpired: false, isTokenInvalid: true }, "This link does not work"],
-])("renders the server outcome %j", async (result, title) => {
+  [
+    { isConfirmed: false, isTokenExpired: true, isTokenInvalid: false },
+    "This link has expired",
+    "Links work for 2 days. Sign in and send yourself a new one.",
+  ],
+  [
+    { isConfirmed: false, isTokenExpired: false, isTokenInvalid: true },
+    "This link does not work",
+    "It may have been replaced by a newer one. Use the latest email, or send a new link.",
+  ],
+])("renders the server outcome %j", async (result, title, body) => {
   const { requests } = stubAtlasFetch(() => data({ confirmEmail: result }));
   render(<EmailConfirmation address={ADDRESS} token="confirmation-token" />);
   expect(await screen.findByRole("heading", { name: title })).toBeVisible();
+  expect(screen.getByText(body)).toBeVisible();
+  const action = screen.getByRole("link", { name: "Send a new link" });
+  expect(action).toHaveAttribute("href", "/notifications");
+  expect(action).not.toHaveAttribute("target");
   expect(requests).toEqual([
     { operationName: "ConfirmEmail", variables: { address: ADDRESS, token: "confirmation-token" } },
   ]);
@@ -107,7 +121,10 @@ it("shows the error title when Atlas fails", async () => {
   const { requests } = stubAtlasFetch(() => failure("Service unavailable"));
   render(<EmailConfirmation address={ADDRESS} token="confirmation-token" />);
   expect(await screen.findByRole("heading", { name: "We could not confirm your email" })).toBeVisible();
+  expect(screen.getByText("Something went wrong on our side. Try the link again in a moment.")).toBeVisible();
   expect(screen.getByRole("link", { name: "Contact support" })).toHaveAttribute("rel", "noopener noreferrer");
+  expect(screen.getByRole("link", { name: "Contact support" })).toHaveAttribute("target", "_blank");
+  expect(screen.getByRole("link", { name: "Contact support" })).toHaveAttribute("href", "https://t.me/kleros");
   expect(requests).toEqual([
     { operationName: "ConfirmEmail", variables: { address: ADDRESS, token: "confirmation-token" } },
   ]);

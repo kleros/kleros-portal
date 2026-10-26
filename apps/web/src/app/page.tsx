@@ -1,7 +1,16 @@
-import { redirect } from "next/navigation";
+"use client";
 
-import { paths } from "@/config/paths";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+import { landingTarget } from "@/config/paths";
 
 export default function Home() {
-  redirect(paths.notifications.getHref());
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(landingTarget(window.location.hash));
+  }, [router]);
+
+  return null;
 }

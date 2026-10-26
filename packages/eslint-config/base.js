@@ -17,6 +17,8 @@ export const config = [
       "**/build/**",
       "**/generated/**",
       "**/coverage/**",
+      "**/.stryker-tmp/**",
+      "**/reports/**",
       "**/playwright-report/**",
       "**/test-results/**",
       "**/artifacts/**",

@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { atlasClient } from "@/lib/atlas/client";
@@ -26,6 +28,7 @@ export function useUpdateTopics(product: string) {
   const queryClient = useQueryClient();
   const { address, token } = useAtlasSession();
   const key = subscriptionsQueryKey(address);
+  const failedSinceDrain = useRef(false);
 
   return useMutation({
     mutationKey: [...updateTopicsMutationKey, product],
@@ -56,7 +59,12 @@ export function useUpdateTopics(product: string) {
     },
     onSettled: (_data, error) => {
       // a failure can leave queued writes guessing; once the queue drains, read back what Atlas holds
-      if (error && queryClient.isMutating({ mutationKey: [...updateTopicsMutationKey, product] }) <= 1) {
+      if (error) failedSinceDrain.current = true;
+      if (
+        failedSinceDrain.current &&
+        queryClient.isMutating({ mutationKey: [...updateTopicsMutationKey, product] }) <= 1
+      ) {
+        failedSinceDrain.current = false;
         void queryClient.invalidateQueries({ queryKey: key });
       }
     },

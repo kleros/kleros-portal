@@ -66,3 +66,21 @@ describe("clearAuthToken", () => {
     expect(() => clearAuthToken()).not.toThrow();
   });
 });
+
+it("treats a blocked sessionStorage getter as an unavailable session", () => {
+  vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+    throw new DOMException("Storage denied", "SecurityError");
+  });
+  expect(readAuthToken(ADDRESS, now)).toBeUndefined();
+  expect(() => clearAuthToken()).not.toThrow();
+});
+
+it("can read and clear a session without a browser window", () => {
+  vi.stubGlobal("window", undefined);
+  try {
+    expect(readAuthToken(ADDRESS, now)).toBeUndefined();
+    expect(() => clearAuthToken()).not.toThrow();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});

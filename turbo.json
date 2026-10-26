@@ -1,7 +1,14 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "globalEnv": ["CI", "NODE_ENV", "MOCK_ATLAS_PORT"],
-  "globalPassThroughEnv": ["E2E_BASE_URL", "NODE_OPTIONS", "LANG", "E2E_MOCK_ATLAS_PORT", "E2E_APP_PORT"],
+  "globalPassThroughEnv": [
+    "E2E_BASE_URL",
+    "NODE_OPTIONS",
+    "LANG",
+    "E2E_MOCK_ATLAS_PORT",
+    "E2E_APP_PORT",
+    "REAL_ATLAS_URI"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -17,3 +17,12 @@ export const paths = {
     getHref: () => "/email-confirmation",
   },
 } as const;
+
+/**
+ * Where `/` sends a visitor. Atlas builds the confirmation link from the signup product's path, and
+ * CourtV2's is Court's hash route `/#/settings/email-confirmation?…`, which only the browser can read.
+ */
+export function landingTarget(hash: string): string {
+  const match = /^#\/settings\/email-confirmation\?(.*)$/.exec(hash);
+  return match ? `${paths.emailConfirmation.getHref()}?${match[1]}` : paths.notifications.getHref();
+}
