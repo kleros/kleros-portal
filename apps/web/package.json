@@ -14,7 +14,8 @@
     "test:watch": "TZ=UTC NODE_OPTIONS=--no-experimental-webstorage LANG=en_US.UTF-8 vitest",
     "test:coverage": "TZ=UTC NODE_OPTIONS=--no-experimental-webstorage LANG=en_US.UTF-8 vitest run --coverage",
     "test:mutation": "TZ=UTC NODE_OPTIONS=--no-experimental-webstorage LANG=en_US.UTF-8 stryker run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:real-atlas": "playwright test -c playwright.real-atlas.config.ts"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

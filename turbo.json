@@ -7,7 +7,8 @@
     "LANG",
     "E2E_MOCK_ATLAS_PORT",
     "E2E_APP_PORT",
-    "REAL_ATLAS_URI"
+    "REAL_ATLAS_URI",
+    "REAL_SENDGRID_MOCK"
   ],
   "tasks": {
     "build": {

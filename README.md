@@ -36,6 +36,10 @@ yarn dev                                       # the portal on :3000 and mock At
 
 CI runs all of them; mutation testing runs incrementally on pull requests and in full nightly.
 
+Against a real Atlas instead of the mock: start Atlas's `postgres`, `sendgrid` and `api` compose services with
+`localhost:3100` added to its `SIWE_DOMAINS`, then `yarn workspace web test:e2e:real-atlas`. It signs up, confirms
+through the link the SendGrid mock caught, changes topics, turns everything off and removes the email.
+
 ## How it talks to Atlas
 
 - Sign-in, the email and its confirmation go through `AtlasProvider` from kleros-app.
