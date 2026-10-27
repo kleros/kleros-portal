@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalEnv": ["CI", "NODE_ENV", "MOCK_ATLAS_PORT"],
+  "globalEnv": ["CI", "NODE_ENV", "MOCK_ATLAS_PORT", "MOCK_ATLAS_EMAIL_COOLDOWN_SECONDS"],
   "globalPassThroughEnv": [
     "E2E_BASE_URL",
     "NODE_OPTIONS",

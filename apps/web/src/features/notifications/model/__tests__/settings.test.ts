@@ -1,15 +1,8 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import {
-  allOn,
-  applyChanges,
-  buildSettings,
-  countOn,
-  productsWithAnyOn,
-  setAll,
-  type ProductSettings,
-} from "../settings";
+import { patchRows } from "../../hooks/useUpdateTopics";
+import { allOn, buildSettings, countOn, productsWithAnyOn, setAll, type ProductSettings } from "../settings";
 
 describe("buildSettings", () => {
   it("keeps first catalogue product/topic order, uses stored booleans over defaults, and drops unoffered pairs", () => {
@@ -78,35 +71,6 @@ const settings: ProductSettings[] = [
   },
   { product: "courtV1", topics: [{ topic: "jurorDraw", enabled: true }] },
 ];
-
-describe("applyChanges", () => {
-  it("changes only named topics on the named product without mutating the inputs", () => {
-    const input = structuredClone(settings);
-    const changes = [
-      { topic: "jurorDraw", enabled: false },
-      { topic: "unknown", enabled: true },
-    ];
-    const beforeChanges = structuredClone(changes);
-    expect(applyChanges(input, "courtV2", changes)).toEqual([
-      {
-        product: "courtV2",
-        topics: [
-          { topic: "jurorDraw", enabled: false },
-          { topic: "caseWon", enabled: false },
-        ],
-      },
-      { product: "courtV1", topics: [{ topic: "jurorDraw", enabled: true }] },
-    ]);
-    expect(input).toEqual(settings);
-    expect(changes).toEqual(beforeChanges);
-  });
-
-  it("leaves unknown products and empty changes alone", () => {
-    expect(applyChanges(settings, "missing", [{ topic: "jurorDraw", enabled: false }])).toEqual(settings);
-    expect(applyChanges(settings, "courtV2", [])).toEqual(settings);
-    expect(applyChanges([], "courtV2", [{ topic: "jurorDraw", enabled: true }])).toEqual([]);
-  });
-});
 
 describe("topic summaries", () => {
   it.each([
@@ -191,22 +155,24 @@ describe("settings properties", () => {
     );
   });
 
-  it("applying setAll reaches the requested value for every topic", () => {
+  it("patching rows with setAll reaches the requested value for every topic", () => {
     fc.assert(
       fc.property(topicStates, fc.boolean(), (topics, enabled) => {
-        expect(applyChanges([{ product: "p", topics }], "p", setAll(topics, enabled))).toEqual([
-          { product: "p", topics: topics.map(({ topic }) => ({ topic, enabled })) },
-        ]);
+        const rows = topics.map(({ topic, enabled: on }) => ({ product: "p", topic, enabled: on }));
+        expect(patchRows(rows, "p", setAll(topics, enabled))).toEqual(
+          topics.map(({ topic }) => ({ product: "p", topic, enabled })),
+        );
       }),
       propertyOptions,
     );
   });
 
-  it("applying the same changes twice is idempotent", () => {
+  it("patching rows with the same changes twice is idempotent", () => {
     fc.assert(
       fc.property(topicStates, topicStates, (topics, changes) => {
-        const once = applyChanges([{ product: "p", topics }], "p", changes);
-        expect(applyChanges(once, "p", changes)).toEqual(once);
+        const rows = topics.map(({ topic, enabled }) => ({ product: "p", topic, enabled }));
+        const once = patchRows(rows, "p", changes);
+        expect(patchRows(once, "p", changes)).toEqual(once);
       }),
       propertyOptions,
     );

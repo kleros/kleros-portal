@@ -62,11 +62,22 @@ function serveSettings(
   update: (request: AtlasRequest) => Response | Promise<Response> = () =>
     data({ updateNotificationSubscriptions: true }),
 ) {
-  return stubAtlasFetch((request) => {
+  let rows = subscriptions.map((row) => ({ ...row }));
+  return stubAtlasFetch(async (request) => {
     if (request.operationName === "NotificationTopics") return data({ notificationTopics: catalogue });
     if (request.operationName === "NotificationSubscriptions")
-      return data({ user: { email: "reader@example.com", notificationSubscriptions: subscriptions } });
-    return update(request);
+      return data({ user: { email: "reader@example.com", notificationSubscriptions: rows } });
+    const response = await update(request);
+    const body = await response.clone().json();
+    if (body.data?.updateNotificationSubscriptions) {
+      const changes = request.variables?.subscriptions as { topic: string; enabled: boolean }[];
+      rows = rows.map((row) => {
+        const change =
+          row.product === request.variables?.product ? changes.find((entry) => entry.topic === row.topic) : undefined;
+        return change ? { ...row, enabled: change.enabled } : row;
+      });
+    }
+    return response;
   });
 }
 const writes = (requests: AtlasRequest[]) =>
@@ -431,4 +442,33 @@ it("shows a plain sign-in message when the session ends before Turn off all", as
     "Changes save as you go",
     "Sign in again to save changes.Retry",
   ]);
+});
+
+it("disables every topic and group switch while turning off all emails", async () => {
+  const response = deferred<Response>();
+  serveSettings(() => response.promise);
+  renderSettings();
+  await screen.findByRole("switch", { name: "All jury duty emails" });
+  await userEvent.click(screen.getByRole("button", { name: "Turn off all" }));
+  await userEvent.click(screen.getByRole("button", { name: "Turn everything off" }));
+  expect(screen.getByRole("button", { name: "Turning off…" })).toBeDisabled();
+  for (const control of screen.getAllByRole("switch")) expect(control).toBeDisabled();
+  await act(async () => response.resolve(data({ updateNotificationSubscriptions: true })));
+  await waitFor(() => {
+    for (const control of screen.getAllByRole("switch")) expect(control).toBeEnabled();
+  });
+});
+
+it("styles visible keyboard focus on every topic and group switch label", async () => {
+  serveSettings();
+  renderSettings();
+  await screen.findByRole("switch", { name: "All jury duty emails" });
+  for (const control of screen.getAllByRole("switch")) {
+    expect(control.closest("label")).toHaveClass(
+      "data-focus-visible:outline-2",
+      "data-focus-visible:outline-offset-2",
+      "data-focus-visible:outline-klerosUIComponentsPrimaryBlue",
+      "rounded-full",
+    );
+  }
 });

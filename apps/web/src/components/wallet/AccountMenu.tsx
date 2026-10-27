@@ -2,11 +2,11 @@
 
 import { Button } from "@kleros/ui-components-library";
 import { useAppKit } from "@reown/appkit/react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount } from "wagmi";
+
+import { useSignOut } from "@/components/providers/SessionContext";
 
 import { shortenAddress } from "@/utils/address";
-
-import { clearAuthToken } from "@/lib/atlas/session";
 
 export function ConnectWalletButton({ text = "Connect wallet", small }: { text?: string; small?: boolean }) {
   const { open } = useAppKit();
@@ -15,7 +15,7 @@ export function ConnectWalletButton({ text = "Connect wallet", small }: { text?:
 
 export function AccountMenu() {
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const signOut = useSignOut();
 
   if (!isConnected || !address) return <ConnectWalletButton small />;
 
@@ -24,15 +24,7 @@ export function AccountMenu() {
       <span className="text-klerosUIComponentsSecondaryText hidden text-sm tabular-nums sm:inline" title={address}>
         {shortenAddress(address)}
       </span>
-      <Button
-        small
-        variant="secondary"
-        text="Sign out"
-        onPress={() => {
-          clearAuthToken();
-          disconnect();
-        }}
-      />
+      <Button small variant="secondary" text="Sign out" onPress={signOut} />
     </div>
   );
 }

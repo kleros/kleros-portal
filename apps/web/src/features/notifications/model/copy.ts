@@ -41,7 +41,7 @@ const GROUPS: Record<string, { id: string; title: string }[]> = {
   foresight: [{ id: "markets", title: "Markets" }],
 };
 
-// Semantics from atlas specs/notifications/<product>/*.md.
+// Recipients follow Atlas packages/bots/src/event-reactions on origin/master.
 const COURT_TOPICS: Record<string, TopicCopy> = {
   JurorDraw: { label: "I'm drawn as a juror", hint: "Any court where you have PNK staked", group: "duty" },
   JurorCanCommit: {
@@ -82,10 +82,14 @@ const POH_TOPICS: Record<string, TopicCopy> = {
   ResolvedRequest: { label: "My registration is accepted", group: "registration" },
   VouchAdded: { label: "Someone vouches for me", hint: "On-chain vouches only", group: "vouching" },
   VouchAddedVoucher: { label: "I vouch for someone", group: "vouching" },
-  PendingRevoke: { label: "I request a revocation", group: "revocation" },
+  PendingRevoke: { label: "A revocation is requested", hint: "Of my profile, or one I requested", group: "revocation" },
   ResolvedRevoke: { label: "A revocation of my profile goes through", group: "revocation" },
-  DisputedSubmission: { label: "My registration is challenged", group: "disputes" },
-  DisputedRevoke: { label: "A revocation I requested is challenged", group: "disputes" },
+  DisputedSubmission: {
+    label: "A registration is challenged",
+    hint: "My registration, or one I challenged",
+    group: "disputes",
+  },
+  DisputedRevoke: { label: "A revocation is challenged", hint: "One I requested or challenged", group: "disputes" },
   ChallengeAccepted: { label: "A challenge I'm part of is accepted", group: "disputes" },
   ChallengeRejected: { label: "A challenge I'm part of is rejected", group: "disputes" },
   DisputeRuledTie: {
@@ -111,7 +115,19 @@ const PRODUCTS: Record<string, ProductCopy & { family: string; topics: Record<st
     name: "Court V1",
     description: "The same for cases on the original Kleros Court.",
     family: "court",
-    topics: COURT_TOPICS,
+    topics: {
+      ...COURT_TOPICS,
+      DisputeAppealable: {
+        label: "A case I was drawn for can be appealed",
+        hint: "Includes jurors from earlier rounds",
+        group: "appeals",
+      },
+      DisputeAppealed: {
+        label: "A case I was drawn for is appealed",
+        hint: "Includes jurors from earlier rounds",
+        group: "appeals",
+      },
+    },
   },
   PohV2: {
     name: "Proof of Humanity",

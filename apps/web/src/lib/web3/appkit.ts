@@ -21,6 +21,7 @@ export const getAppKit = () =>
       icons: [],
     },
     enableCoinbase: false,
+    enableBaseAccount: false,
     features: {
       analytics: false,
       email: false,

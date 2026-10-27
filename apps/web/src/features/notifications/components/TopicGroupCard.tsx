@@ -3,9 +3,23 @@
 import { useId } from "react";
 
 import { Switch } from "@kleros/ui-components-library";
+import { useIsMutating } from "@tanstack/react-query";
 
+import { cn } from "@/utils/cn";
+
+import { turnOffAllMutationKey } from "../hooks/useTurnOffAll";
 import { topicCopy, type TopicGroup } from "../model/copy";
 import { allOn, countOn, setAll, type TopicChange, type TopicState } from "../model/settings";
+
+/**
+ * The library's off track is the stroke colour, under 3:1 against the card (WCAG 1.4.11);
+ * secondary text clears it in both themes. The library marks the focused switch's label `data-focus-visible`.
+ */
+const SWITCH_CLASS = cn(
+  "rounded-full data-focus-visible:outline-2 data-focus-visible:outline-offset-2",
+  "data-focus-visible:outline-klerosUIComponentsPrimaryBlue",
+  "[&:not([data-selected])>span:last-child]:bg-klerosUIComponentsSecondaryText",
+);
 
 interface TopicGroupCardProps {
   product: string;
@@ -14,6 +28,7 @@ interface TopicGroupCardProps {
 }
 
 export function TopicGroupCard({ product, group, onChange }: TopicGroupCardProps) {
+  const turningOff = useIsMutating({ mutationKey: turnOffAllMutationKey }) > 0;
   const titleId = useId();
   const on = countOn(group.items);
   const everyOn = allOn(group.items);
@@ -33,7 +48,9 @@ export function TopicGroupCard({ product, group, onChange }: TopicGroupCardProps
           </span>
           {group.items.length > 1 ? (
             <Switch
+              isDisabled={turningOff}
               small
+              className={SWITCH_CLASS}
               aria-label={`All ${group.title.toLowerCase()} emails`}
               isSelected={everyOn}
               onChange={() => onChange(setAll(group.items, !everyOn))}
@@ -54,9 +71,10 @@ export function TopicGroupCard({ product, group, onChange }: TopicGroupCardProps
                 {hint ? <span className="text-klerosUIComponentsSecondaryText text-xs leading-4">{hint}</span> : null}
               </div>
               <Switch
+                isDisabled={turningOff}
                 small
                 aria-label={label}
-                className="shrink-0"
+                className={cn("shrink-0", SWITCH_CLASS)}
                 isSelected={state.enabled}
                 onChange={(enabled) => onChange([{ topic: state.topic, enabled }])}
               />

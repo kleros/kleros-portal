@@ -23,10 +23,10 @@ const poh = [
   ["ResolvedRequest", "My registration is accepted", "registration"],
   ["VouchAdded", "Someone vouches for me", "vouching"],
   ["VouchAddedVoucher", "I vouch for someone", "vouching"],
-  ["PendingRevoke", "I request a revocation", "revocation"],
+  ["PendingRevoke", "A revocation is requested", "revocation"],
   ["ResolvedRevoke", "A revocation of my profile goes through", "revocation"],
-  ["DisputedSubmission", "My registration is challenged", "disputes"],
-  ["DisputedRevoke", "A revocation I requested is challenged", "disputes"],
+  ["DisputedSubmission", "A registration is challenged", "disputes"],
+  ["DisputedRevoke", "A revocation is challenged", "disputes"],
   ["ChallengeAccepted", "A challenge I'm part of is accepted", "disputes"],
   ["ChallengeRejected", "A challenge I'm part of is rejected", "disputes"],
   ["DisputeRuledTie", "A challenge I'm part of ends without a ruling", "disputes"],
@@ -61,14 +61,13 @@ describe("productCopy", () => {
 
 describe("Atlas registry topic copy", () => {
   describe.each(["CourtV1", "CourtV2"])("%s", (product) => {
-    it.each(court.filter(([topic]) => topic !== "CaseWon"))(
-      "has copy and a known group for %s",
-      (topic, label, group) => {
-        expect(topicCopy(product, topic).label).toBe(label);
-        expect(topicCopy(product, topic).group).toBe(group);
-        expect(groupTopics(product, [{ topic }]).map(({ id }) => id)).toEqual([group]);
-      },
-    );
+    it.each(
+      court.filter(([topic]) => topic !== "CaseWon" && !(product === "CourtV1" && topic.startsWith("DisputeAppeal"))),
+    )("has copy and a known group for %s", (topic, label, group) => {
+      expect(topicCopy(product, topic).label).toBe(label);
+      expect(topicCopy(product, topic).group).toBe(group);
+      expect(groupTopics(product, [{ topic }]).map(({ id }) => id)).toEqual([group]);
+    });
   });
   it.each(poh.filter(([topic]) => topic !== "Rewards"))(
     "has PoH copy and a known group for %s",
@@ -78,7 +77,6 @@ describe("Atlas registry topic copy", () => {
       expect(groupTopics("PohV2", [{ topic }]).map(({ id }) => id)).toEqual([group]);
     },
   );
-  // Bug: CaseWon's sentence was accidentally capitalized during the enum-key conversion.
   it.each(["CourtV1", "CourtV2"])("keeps sentence-case CaseWon copy for %s", (product) => {
     expect(topicCopy(product, "CaseWon")).toEqual({
       label: "I earn rewards on a case",
@@ -86,7 +84,6 @@ describe("Atlas registry topic copy", () => {
       group: "outcomes",
     });
   });
-  // Bug: GROUPS uses "Rewards", while the Rewards topic points at "rewards", sending it to Other.
   it("keeps the Atlas Rewards topic in the known Rewards group", () => {
     expect(topicCopy("PohV2", "Rewards")).toEqual({
       label: "Rewards and referrals",
@@ -152,7 +149,6 @@ describe("groupTopics", () => {
       },
     ]);
   });
-  // Bug: the Rewards group id mismatch prevents the complete PoH group order.
   it("orders PoH groups rather than alphabetising or using input order", () => {
     expect(
       groupTopics(
@@ -223,4 +219,14 @@ it.each([
   ["PohV2", "DisputeRuledTie", "A tie, or the court refused to arbitrate"],
 ])("explains %s/%s with its delivery conditions", (product, topic, hint) => {
   expect(topicCopy(product, topic).hint).toBe(hint);
+});
+
+it.each([
+  ["PohV2", "PendingRevoke", "A revocation is requested", "Of my profile, or one I requested"],
+  ["PohV2", "DisputedSubmission", "A registration is challenged", "My registration, or one I challenged"],
+  ["PohV2", "DisputedRevoke", "A revocation is challenged", "One I requested or challenged"],
+  ["CourtV1", "DisputeAppealable", "A case I was drawn for can be appealed", "Includes jurors from earlier rounds"],
+  ["CourtV1", "DisputeAppealed", "A case I was drawn for is appealed", "Includes jurors from earlier rounds"],
+])("describes all recipients of %s/%s", (product, topic, label, hint) => {
+  expect(topicCopy(product, topic)).toMatchObject({ label, hint });
 });

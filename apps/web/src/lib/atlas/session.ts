@@ -20,7 +20,7 @@ export function readAuthToken(address: string | undefined, nowSeconds = Date.now
   }
 }
 
-/** Forgets the session; `AtlasProvider` re-reads storage only on mount, so callers also disconnect the wallet. */
+/** Forgets the session; `AtlasProvider` re-reads storage only on mount, so callers must remount it. */
 export function clearAuthToken() {
   try {
     window.sessionStorage.removeItem(AUTH_TOKEN_KEY);

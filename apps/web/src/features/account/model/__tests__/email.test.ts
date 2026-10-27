@@ -26,7 +26,6 @@ describe("email validation", () => {
   ])("rejects %j", (email) => {
     expect(isValidEmail(email)).toBe(false);
   });
-  // Bug: EMAIL's TLD class accepts digits and punctuation despite the documented letters-only rule.
   it.each(["me@example.12", "me@example.!!"])("rejects a non-letter TLD in %j", (email) => {
     expect(isValidEmail(email)).toBe(false);
   });
@@ -58,4 +57,29 @@ describe("formatCooldown", () => {
     vi.stubEnv("TZ", "UTC");
     expect(formatCooldown(new Date(until), new Date(now))).toBe(expected);
   });
+});
+
+it.each([
+  ["alice@example.com", true],
+  ["first.last+court@sub.example.org", true],
+  ["a_b@example-domain.COM", true],
+  ["é@example.com", true],
+  [".alice@example.com", false],
+  ["alice.@example.com", false],
+  ["ali..ce@example.com", false],
+  ["alice@-example.com", false],
+  ["alice@example-.com", false],
+  ["alice@ex_ample.com", false],
+  ["alice@example..com", false],
+  ["alice@example.12", false],
+  ["alice@example.c", false],
+  ["alice@.example.com", false],
+  ["alice@example.com.", false],
+  ["alice@exam!ple.com", false],
+  ["al(ice@example.com", false],
+  ["alice@example.c0m", false],
+  ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", false],
+  ["alice@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", false],
+])("validates Atlas email %s as %s", (email, accepted) => {
+  expect(isValidEmail(email)).toBe(accepted);
 });

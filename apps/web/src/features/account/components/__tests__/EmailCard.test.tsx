@@ -129,3 +129,22 @@ it("renders no email card for a user without an email", () => {
   const { container } = renderWithQuery(<EmailCard />);
   expect(container).toBeEmptyDOMElement();
 });
+
+it("enables Change email exactly when the cooldown expires", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(SESSION_NOW);
+  vi.mocked(useAtlasProvider).mockReturnValue({
+    ...atlas,
+    user: {
+      email: "reader@example.com",
+      isEmailVerified: false,
+      emailUpdateableAt: new Date(SESSION_NOW.getTime() + 1000).toISOString(),
+    },
+  });
+  renderWithQuery(<EmailCard />);
+  act(() => vi.advanceTimersByTime(999));
+  expect(screen.getByRole("button", { name: "Change email" })).toBeDisabled();
+  act(() => vi.advanceTimersByTime(1));
+  expect(screen.getByRole("button", { name: "Change email" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Resend link" })).toBeEnabled();
+});

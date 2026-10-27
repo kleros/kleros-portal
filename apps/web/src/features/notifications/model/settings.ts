@@ -51,23 +51,6 @@ export function buildSettings(
   return [...products].map(([product, topics]) => ({ product, topics }));
 }
 
-/** `settings` with `changes` applied to `product`; other products and unknown topics are left alone. */
-export function applyChanges(
-  settings: readonly ProductSettings[],
-  product: string,
-  changes: readonly TopicChange[],
-): ProductSettings[] {
-  const next = new Map(changes.map((change) => [change.topic, change.enabled]));
-  return settings.map((entry) =>
-    entry.product !== product
-      ? entry
-      : {
-          ...entry,
-          topics: entry.topics.map((state) => ({ ...state, enabled: next.get(state.topic) ?? state.enabled })),
-        },
-  );
-}
-
 export const countOn = (topics: readonly TopicState[]) => topics.filter((state) => state.enabled).length;
 
 export const allOn = (topics: readonly TopicState[]) => topics.length > 0 && topics.every((state) => state.enabled);

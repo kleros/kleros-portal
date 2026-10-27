@@ -1,14 +1,18 @@
 import { StrictMode } from "react";
 
 import { useAtlasProvider } from "@kleros/kleros-app";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { atlasQueryKeys } from "@/lib/atlas/queryKeys";
 
 import { testAtlas } from "@/test/atlas";
 import { ADDRESS } from "@/test/jwt";
 import { data, deferred, failure, stubAtlasFetch } from "@/test/network";
+import { renderWithQuery as render } from "@/test/render";
 
-import { EmailConfirmation, outcomeOf } from "../EmailConfirmation";
+import { outcomeOf } from "../../hooks/useEmailConfirmation";
+import { EmailConfirmation } from "../EmailConfirmation";
 
 vi.mock("@kleros/kleros-app", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@kleros/kleros-app")>()),
@@ -140,4 +144,16 @@ it("shows the error title for the provider's resolved isError flag", async () =>
   render(<EmailConfirmation address={ADDRESS} token="confirmation-token" />);
   expect(await screen.findByRole("heading", { name: "We could not confirm your email" })).toBeVisible();
   expect(atlas.confirmEmail).toHaveBeenCalledExactlyOnceWith({ address: ADDRESS, token: "confirmation-token" });
+});
+
+it("invalidates cached user verification after confirmation", async () => {
+  const response = deferred<Response>();
+  stubAtlasFetch(() => response.promise);
+  const { client } = render(<EmailConfirmation address={ADDRESS} token="confirmation-token" />);
+  client.setQueryData(atlasQueryKeys.user, { email: "reader@example.com", isEmailVerified: false });
+  await act(async () =>
+    response.resolve(data({ confirmEmail: { isConfirmed: true, isTokenExpired: false, isTokenInvalid: false } })),
+  );
+  expect(await screen.findByRole("heading", { name: "Your email is confirmed" })).toBeVisible();
+  expect(client.getQueryState(atlasQueryKeys.user)?.isInvalidated).toBe(true);
 });

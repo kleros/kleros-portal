@@ -10,6 +10,7 @@ import type { Subscription, TopicPair } from "@/features/notifications/model/set
 
 import { SignInGate } from "@/components/auth/SignInGate";
 import { Shell } from "@/components/layout/Shell";
+import { SessionContext } from "@/components/providers/SessionContext";
 
 import { atlasQueryKeys } from "@/lib/atlas/queryKeys";
 import { AUTH_TOKEN_KEY } from "@/lib/atlas/session";
@@ -106,16 +107,18 @@ if (state === "loading") {
 function Harness() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Shell>
-        <SignInGate>
-          <NotificationSettings
-            requestedProduct={params.get("product") ?? undefined}
-            noUser={<AddEmail />}
-            header={<EmailCard />}
-            dangerZone={<RemoveEmail />}
-          />
-        </SignInGate>
-      </Shell>
+      <SessionContext.Provider value={() => {}}>
+        <Shell>
+          <SignInGate>
+            <NotificationSettings
+              requestedProduct={params.get("product") ?? undefined}
+              noUser={<AddEmail />}
+              header={<EmailCard />}
+              dangerZone={<RemoveEmail />}
+            />
+          </SignInGate>
+        </Shell>
+      </SessionContext.Provider>
     </QueryClientProvider>
   );
 }

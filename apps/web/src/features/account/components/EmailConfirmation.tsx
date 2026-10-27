@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-
-import { useAtlasProvider } from "@kleros/kleros-app";
-import { isAddress } from "viem";
 
 import { StatusIcon, type StatusIconName } from "@/components/ui/StatusIcon";
 
 import { paths } from "@/config/paths";
 import { siteConfig } from "@/config/site";
 
-export type ConfirmationOutcome = "confirmed" | "expired" | "invalid" | "error";
+import { useEmailConfirmation, type ConfirmationOutcome } from "../hooks/useEmailConfirmation";
 
 const OUTCOMES: Record<
   ConfirmationOutcome,
@@ -43,37 +39,8 @@ const OUTCOMES: Record<
   },
 };
 
-/** Maps Atlas's confirmEmail answer to what the page says. */
-export function outcomeOf(result: {
-  isConfirmed: boolean;
-  isTokenExpired: boolean;
-  isTokenInvalid: boolean;
-  isError: boolean;
-}): ConfirmationOutcome {
-  if (result.isConfirmed) return "confirmed";
-  if (result.isError) return "error";
-  if (result.isTokenExpired) return "expired";
-  return "invalid";
-}
-
 export function EmailConfirmation({ address, token }: { address?: string; token?: string }) {
-  const { confirmEmail } = useAtlasProvider();
-  const [outcome, setOutcome] = useState<ConfirmationOutcome | null>(null);
-  const started = useRef(false);
-
-  useEffect(() => {
-    // a token confirms once; a second call would report it invalid
-    if (started.current) return;
-    started.current = true;
-
-    if (!address || !isAddress(address) || !token) {
-      setOutcome("invalid");
-      return;
-    }
-    confirmEmail({ address, token })
-      .then((result) => setOutcome(outcomeOf(result)))
-      .catch(() => setOutcome("error"));
-  }, [address, token, confirmEmail]);
+  const outcome = useEmailConfirmation(address, token);
 
   if (!outcome) {
     return (

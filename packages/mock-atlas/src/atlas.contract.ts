@@ -196,6 +196,64 @@ export const atlasContract = (connect: (server: ReturnType<typeof createMockAtla
     vi.unstubAllEnvs();
   });
 
+  it("rejects a lowercase-address nonce with a checksummed SIWE address", async () => {
+    const account = privateKeyToAccount("0x0000000000000000000000000000000000000000000000000000000000000001");
+    expect(account.address).not.toBe(account.address.toLowerCase());
+    const nonce = (await gql(queries.nonce, { address: account.address.toLowerCase() })).data?.nonce;
+    if (!nonce) throw new Error("Nonce was not returned");
+    const message = createSiweMessage({
+      address: account.address,
+      chainId: 1,
+      domain: "localhost:3000",
+      uri: "http://localhost:3000",
+      version: "1",
+      nonce,
+      issuedAt: new Date(NOW),
+      expirationTime: new Date(NOW + 600_000),
+    });
+    const signature = await account.signMessage({ message });
+    expect(await gql(queries.login, { message, signature })).toEqual(
+      controlledError(
+        queries.login,
+        "login",
+        "Invalid nonce in siwe signature, please provide a valid siwe signature",
+        "InvalidNonceError",
+        401,
+      ),
+    );
+  });
+
+  it.each([
+    ["alice@example.com", true],
+    ["first.last+court@sub.example.org", true],
+    ["a_b@example-domain.COM", true],
+    ["é@example.com", true],
+    [".alice@example.com", false],
+    ["alice.@example.com", false],
+    ["ali..ce@example.com", false],
+    ["alice@-example.com", false],
+    ["alice@example-.com", false],
+    ["alice@ex_ample.com", false],
+    ["alice@example..com", false],
+    ["alice@example.12", false],
+    ["alice@example.c", false],
+    ["alice@.example.com", false],
+    ["alice@example.com.", false],
+    ["alice@exam!ple.com", false],
+    ["al(ice@example.com", false],
+    ["alice@example.c0m", false],
+    ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", false],
+    ["alice@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", false],
+  ])("validates signup email %s as %s with Atlas's error shape", async (email, accepted) => {
+    const { token } = await login();
+    const response = await gql(queries.add, { settings: { email, product: "CourtV2" } }, token);
+    expect(response).toEqual(
+      accepted
+        ? { data: { addUser: true } }
+        : controlledError(queries.add, "addUser", "Bad Request Exception", "HttpClientError", 400),
+    );
+  });
+
   describe("catalogue and dispatch", () => {
     it("exports the exact registry values/defaults and returns all 36 rows in Atlas order", async () => {
       expect(DEFAULT_PORT).toBe(4747);
@@ -983,7 +1041,7 @@ export const atlasContract = (connect: (server: ReturnType<typeof createMockAtla
           401,
         ),
       );
-      const nonce = (await gql(queries.nonce, { address: account.address.toLowerCase() })).data?.nonce;
+      const nonce = (await gql(queries.nonce, { address: account.address })).data?.nonce;
       if (!nonce) throw new Error("Nonce was not returned");
       const next = createSiweMessage({
         address: account.address,

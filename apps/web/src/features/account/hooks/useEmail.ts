@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useReducer } from "react";
+
 import { useAtlasProvider } from "@kleros/kleros-app";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -19,6 +21,14 @@ export function useEmail() {
   const queryClient = useQueryClient();
   const atlas = useAtlasProvider();
   const email = atlas.user?.email || null;
+  const [tick, refresh] = useReducer((value: number) => value + 1, 0);
+  const until = cooldownUntil(atlas.user?.emailUpdateableAt)?.getTime();
+
+  useEffect(() => {
+    if (until === undefined) return;
+    const timer = setTimeout(refresh, Math.min(Math.max(0, until - Date.now()), 2 ** 31 - 1));
+    return () => clearTimeout(timer);
+  }, [until, tick]);
 
   // a new or removed user starts from Atlas's defaults, so cached preferences are stale either way
   const resetPreferences = () => queryClient.invalidateQueries({ queryKey: atlasQueryKeys.allSubscriptions });

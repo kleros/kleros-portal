@@ -55,7 +55,7 @@ export const login = async (store: Store, message: string, signature: Hex) => {
     throw new GraphqlError("Domain and URI fields do not match", "SIWEDomainURIMismatchError", 401);
   }
   const address = fields.address!.toLowerCase();
-  const nonces = store.nonces.get(address);
+  const nonces = store.nonces.get(fields.address!);
   if (!nonces?.delete(fields.nonce!))
     throw new GraphqlError(
       "Invalid nonce in siwe signature, please provide a valid siwe signature",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Button, TextField } from "@kleros/ui-components-library";
 
@@ -21,7 +21,10 @@ interface EmailFormProps {
 export function EmailForm({ initial = "", submitText, busyText, isBusy, error, onSubmit, onCancel }: EmailFormProps) {
   const [value, setValue] = useState(initial);
   const [touched, setTouched] = useState(false);
+  const messageId = useId();
   const invalid = touched && !isValidEmail(value);
+
+  const message = invalid ? "Enter a valid email address" : error;
 
   return (
     <form
@@ -30,7 +33,8 @@ export function EmailForm({ initial = "", submitText, busyText, isBusy, error, o
       onSubmit={(event) => {
         event.preventDefault();
         setTouched(true);
-        if (isValidEmail(value) && !isBusy) onSubmit(value);
+        if (!isValidEmail(value)) event.currentTarget.querySelector("input")?.focus();
+        else if (!isBusy) onSubmit(value);
       }}
     >
       <TextField
@@ -42,9 +46,15 @@ export function EmailForm({ initial = "", submitText, busyText, isBusy, error, o
         onChange={setValue}
         isDisabled={isBusy}
         variant={invalid || error ? "error" : undefined}
-        message={invalid ? "Enter a valid email address" : (error ?? undefined)}
+        isInvalid={Boolean(invalid || error)}
+        aria-describedby={message ? messageId : undefined}
         className="w-full [&_input]:w-full"
       />
+      {message ? (
+        <p id={messageId} role="alert" className="text-klerosUIComponentsError text-sm">
+          {message}
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" small text={isBusy ? busyText : submitText} isDisabled={isBusy} />
         {onCancel ? <Button small variant="secondary" text="Cancel" isDisabled={isBusy} onPress={onCancel} /> : null}

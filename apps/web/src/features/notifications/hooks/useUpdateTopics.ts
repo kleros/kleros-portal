@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { atlasClient } from "@/lib/atlas/client";
@@ -11,6 +9,12 @@ import { useAtlasSession } from "@/hooks/useAtlasSession";
 import { subscriptionsQueryKey } from "./useNotificationSettings";
 import { updateSubscriptions } from "../api/notifications";
 import type { Subscription, TopicChange } from "../model/settings";
+
+const failedSinceDrain = new Set<string>();
+
+export function resetFailedTopicWrites() {
+  failedSinceDrain.clear();
+}
 
 export const updateTopicsMutationKey = ["updateNotificationSubscriptions"] as const;
 
@@ -28,7 +32,6 @@ export function useUpdateTopics(product: string) {
   const queryClient = useQueryClient();
   const { address, token } = useAtlasSession();
   const key = subscriptionsQueryKey(address);
-  const failedSinceDrain = useRef(false);
 
   return useMutation({
     mutationKey: [...updateTopicsMutationKey, product],
@@ -58,14 +61,18 @@ export function useUpdateTopics(product: string) {
       );
     },
     onSettled: (_data, error) => {
-      // a failure can leave queued writes guessing; once the queue drains, read back what Atlas holds
-      if (error) failedSinceDrain.current = true;
-      if (
-        failedSinceDrain.current &&
-        queryClient.isMutating({ mutationKey: [...updateTopicsMutationKey, product] }) <= 1
-      ) {
-        failedSinceDrain.current = false;
-        void queryClient.invalidateQueries({ queryKey: key });
+      if (error) failedSinceDrain.add(`${address}:${product}`);
+      // An address-wide refetch must wait for optimistic writes across every product.
+      if (queryClient.isMutating({ mutationKey: updateTopicsMutationKey }) <= 1 && failedSinceDrain.size > 0) {
+        const addresses = new Set([...failedSinceDrain].map((entry) => entry.split(":")[0]));
+        failedSinceDrain.clear();
+        void Promise.all(
+          [...addresses].map((failedAddress) =>
+            queryClient.invalidateQueries({
+              queryKey: subscriptionsQueryKey(failedAddress === "undefined" ? undefined : failedAddress),
+            }),
+          ),
+        );
       }
     },
   });

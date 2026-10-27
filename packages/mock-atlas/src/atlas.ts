@@ -4,6 +4,7 @@ import type { Hex } from "viem";
 import { generateSiweNonce } from "viem/siwe";
 
 import { authenticate, login } from "./auth";
+import { isValidEmail } from "./email";
 import {
   enumInput,
   GraphqlError,
@@ -79,7 +80,7 @@ const resolve = async (store: Store, field: Field, prepared: ReturnType<typeof p
     case "notificationTopics":
       return projectFields(wireRows(offeredTopics(product)), field.fields);
     case "nonce": {
-      const key = String(args.address).toLowerCase();
+      const key = String(args.address);
       const nonce = generateSiweNonce();
       const nonces = store.nonces.get(key) ?? new Set<string>();
       nonces.add(nonce);
@@ -113,8 +114,10 @@ const resolve = async (store: Store, field: Field, prepared: ReturnType<typeof p
       );
     }
     case "addUser": {
-      if (user) throw new GraphqlError("The user is already registered", "UserAlreadyRegisteredError", 409);
       const settings = args.addUserSettings as { email: string; roles?: unknown };
+      if (typeof settings.email !== "string" || !isValidEmail(settings.email))
+        throw new GraphqlError("Bad Request Exception", "HttpClientError", 400);
+      if (user) throw new GraphqlError("The user is already registered", "UserAlreadyRegisteredError", 409);
       if (settings.roles)
         throw new GraphqlError("Unauthorized: only admins can assign roles", "UnauthorizedRoleAssignmentError", 403);
       store.users.set(address!, {

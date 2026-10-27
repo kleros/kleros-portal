@@ -13,7 +13,7 @@ import { renderHookWithQuery, testQueryClient } from "@/test/render";
 import { fetchSubscriptions } from "../../api/notifications";
 import type { Subscription } from "../../model/settings";
 import { subscriptionsQueryKey } from "../useNotificationSettings";
-import { useUpdateTopics } from "../useUpdateTopics";
+import { resetFailedTopicWrites, useUpdateTopics } from "../useUpdateTopics";
 
 vi.mock("wagmi", () => ({ useAccount: () => ({ address: ADDRESS }) }));
 vi.mock("@kleros/kleros-app", async (importOriginal) => ({
@@ -23,6 +23,7 @@ vi.mock("@kleros/kleros-app", async (importOriginal) => ({
 
 const key = subscriptionsQueryKey(ADDRESS);
 beforeEach(async () => {
+  resetFailedTopicWrites();
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(SESSION_NOW);
   sessionStorage.clear();
@@ -215,59 +216,89 @@ it("requires a session before sending a write and restores the optimistic cache"
   expect(client.getQueryData(key)).toEqual([{ product: "CourtV2", topic: "JurorDraw", enabled: true }]);
 });
 
-it("refetches after the product's final failure even while a different product is writing", async () => {
-  const first = deferred<Response>();
-  const second = deferred<Response>();
-  const other = deferred<Response>();
-  const readback = deferred<Response>();
-  let courtWrites = 0;
+it("reconciles Court's server value only after the pending PoH write succeeds", async () => {
+  const courtWrite = deferred<Response>();
+  const pohWrite = deferred<Response>();
+  let server = [
+    { product: "CourtV2", topic: "JurorDraw", enabled: false },
+    { product: "PohV2", topic: "Rewards", enabled: false },
+  ];
   const { requests } = stubAtlasFetch(({ operationName, variables }) => {
-    if (operationName === "NotificationSubscriptions") return readback.promise;
-    if (variables?.product === "PohV2") return other.promise;
-    courtWrites += 1;
-    return courtWrites === 1 ? first.promise : second.promise;
+    if (operationName === "NotificationSubscriptions") return data({ user: { notificationSubscriptions: server } });
+    return variables?.product === "CourtV2" ? courtWrite.promise : pohWrite.promise;
   });
   const client = testQueryClient();
-  const initial = [{ product: "CourtV2", topic: "JurorDraw", enabled: true }];
-  client.setQueryData(key, initial);
-  const otherKey = subscriptionsQueryKey("0xother");
-  client.setQueryData(otherKey, []);
+  client.setQueryData(key, [
+    { product: "CourtV2", topic: "JurorDraw", enabled: true },
+    { product: "PohV2", topic: "Rewards", enabled: false },
+  ]);
   const { result } = renderHookWithQuery(() => {
     useQuery({ queryKey: key, queryFn: () => fetchSubscriptions(atlasClient()), staleTime: Infinity });
     return { court: useUpdateTopics("CourtV2"), poh: useUpdateTopics("PohV2") };
   }, client);
-  let a!: Promise<unknown>;
-  let b!: Promise<unknown>;
-  let c!: Promise<boolean>;
+  let court!: Promise<unknown>;
+  let poh!: Promise<boolean>;
   act(() => {
-    a = result.current.court.mutateAsync([{ topic: "JurorDraw", enabled: false }]).catch((error: unknown) => error);
+    court = result.current.court.mutateAsync([{ topic: "JurorDraw", enabled: false }]).catch((error: unknown) => error);
+    poh = result.current.poh.mutateAsync([{ topic: "Rewards", enabled: true }]);
   });
-  await waitFor(() => expect(courtWrites).toBe(1));
-  act(() => {
-    b = result.current.court.mutateAsync([{ topic: "JurorDraw", enabled: true }]).catch((error: unknown) => error);
-    c = result.current.poh.mutateAsync([{ topic: "Rewards", enabled: false }]);
-  });
-  await waitFor(() => expect(result.current.court.isPaused).toBe(true));
+  await waitFor(() => expect(requests).toHaveLength(2));
   await act(async () => {
-    first.resolve(failure("First rejected"));
-    await a;
+    courtWrite.resolve(failure("Court rejected"));
+    await court;
   });
-  await waitFor(() => expect(courtWrites).toBe(2));
-  expect(requests.filter(({ operationName }) => operationName === "NotificationSubscriptions")).toEqual([]);
-  await act(async () => {
-    second.resolve(failure("Last rejected"));
-    await b;
-  });
-  expect(requests.filter(({ operationName }) => operationName === "NotificationSubscriptions")).toEqual([
-    { operationName: "NotificationSubscriptions" },
+  expect(client.getQueryData(key)).toEqual([
+    { product: "CourtV2", topic: "JurorDraw", enabled: true },
+    { product: "PohV2", topic: "Rewards", enabled: true },
   ]);
-  expect(client.getQueryState(otherKey)?.isInvalidated).toBe(false);
   await act(async () => {
-    readback.resolve(data({ user: { notificationSubscriptions: initial } }));
-    other.resolve(data({ updateNotificationSubscriptions: true }));
-    await c;
+    server = [
+      { product: "CourtV2", topic: "JurorDraw", enabled: false },
+      { product: "PohV2", topic: "Rewards", enabled: true },
+    ];
+    pohWrite.resolve(data({ updateNotificationSubscriptions: true }));
+    await poh;
   });
-  await waitFor(() => expect(client.getQueryData(key)).toEqual(initial));
+  await waitFor(() => expect(client.getQueryData(key)).toEqual(server));
+});
+
+it("reconciles a failed unmounted panel after the remounted panel's queued write succeeds", async () => {
+  const first = deferred<Response>();
+  const second = deferred<Response>();
+  const server = [{ product: "CourtV2", topic: "JurorDraw", enabled: true }];
+  let writes = 0;
+  stubAtlasFetch(({ operationName }) => {
+    if (operationName === "NotificationSubscriptions") return data({ user: { notificationSubscriptions: server } });
+    return ++writes === 1 ? first.promise : second.promise;
+  });
+  const client = testQueryClient();
+  client.setQueryData(key, [{ product: "CourtV2", topic: "JurorDraw", enabled: false }]);
+  const old = renderHookWithQuery(() => useUpdateTopics("CourtV2"), client);
+  let off!: Promise<unknown>;
+  act(() => {
+    off = old.result.current.mutateAsync([{ topic: "JurorDraw", enabled: true }]).catch((error: unknown) => error);
+  });
+  await waitFor(() => expect(writes).toBe(1));
+  old.unmount();
+  const next = renderHookWithQuery(() => {
+    useQuery({ queryKey: key, queryFn: () => fetchSubscriptions(atlasClient()), staleTime: Infinity });
+    return useUpdateTopics("CourtV2");
+  }, client);
+  let on!: Promise<boolean>;
+  act(() => {
+    on = next.result.current.mutateAsync([{ topic: "JurorDraw", enabled: true }]);
+  });
+  await waitFor(() => expect(next.result.current.isPaused).toBe(true));
+  await act(async () => {
+    first.resolve(failure("Rejected"));
+    await off;
+  });
+  await waitFor(() => expect(writes).toBe(2));
+  await act(async () => {
+    second.resolve(data({ updateNotificationSubscriptions: true }));
+    await on;
+  });
+  await waitFor(() => expect(client.getQueryData(key)).toEqual(server));
 });
 
 it("refetches once a product queue drains after an earlier failure followed by success", async () => {

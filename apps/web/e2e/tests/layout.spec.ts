@@ -63,6 +63,39 @@ function overflowing(page: Page) {
   });
 }
 
+/**
+ * Switch tracks, on or off, under 3:1 against the surface behind them (WCAG 1.4.11 non-text contrast);
+ * axe does not measure this.
+ */
+function weakSwitchTracks(page: Page) {
+  return page.evaluate(() => {
+    const rgb = (value: string) => (value.match(/[\d.]+/g) ?? []).slice(0, 4).map(Number);
+    const luminance = ([r = 0, g = 0, b = 0]: number[]) =>
+      [r, g, b]
+        .map((channel) => channel / 255)
+        .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+        .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i]!, 0);
+    const surface = (element: Element | null): number[] => {
+      for (let node = element; node; node = node.parentElement) {
+        const color = rgb(getComputedStyle(node).backgroundColor);
+        if (color.length === 3 || (color[3] ?? 0) > 0) return color;
+      }
+      return [255, 255, 255];
+    };
+    return [...document.querySelectorAll<HTMLInputElement>("input[role='switch']")].flatMap((input) => {
+      const label = input.closest("label");
+      const track = label?.querySelector(":scope > span:last-child");
+      if (!label || !track) return [];
+      const a = luminance(rgb(getComputedStyle(track).backgroundColor));
+      const b = luminance(surface(label.parentElement));
+      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      return ratio < 3
+        ? [`${input.getAttribute("aria-label")} (${input.checked ? "on" : "off"}): ${ratio.toFixed(2)}`]
+        : [];
+    });
+  });
+}
+
 /** Single-line elements whose text is wider than their box, such as a fixed-width chip. */
 function clippedText(page: Page) {
   return page.evaluate(() =>
@@ -80,6 +113,22 @@ function clippedText(page: Page) {
 }
 
 for (const theme of ["light", "dark"] as const) {
+  test(`switch keyboard focus · ${theme}`, async ({ page }) => {
+    await openHarness(page, `${harness.url}?theme=${theme}&${STATES["court-v2"]}`);
+    const control = page.getByRole("switch").first();
+    await expect(control).toBeVisible();
+    for (let presses = 0; presses < 50; presses += 1) {
+      await page.keyboard.press("Tab");
+      if (await control.evaluate((element) => element === document.activeElement)) break;
+    }
+    await expect(control).toBeFocused();
+    const label = control.locator("xpath=ancestor::label");
+    await expect(label).toHaveAttribute("data-focus-visible", "true");
+    await expect.poll(() => label.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe("none");
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
   for (const [name, query] of Object.entries(STATES)) {
     for (const viewport of VIEWPORTS) {
       test(`${name} · ${theme} · ${viewport.width}x${viewport.height}`, async ({ page }) => {
@@ -91,7 +140,7 @@ for (const theme of ["light", "dark"] as const) {
         expect(await clippedText(page)).toEqual([]);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
 
-        // every switch is on screen and not covered: the hit test at its centre lands on it
+        // every switch lies inside the viewport
         for (const control of await page.getByRole("switch").all()) {
           await control.scrollIntoViewIfNeeded();
           const box = await control.locator("xpath=..").boundingBox();
@@ -100,6 +149,7 @@ for (const theme of ["light", "dark"] as const) {
           expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
         }
 
+        expect(await weakSwitchTracks(page)).toEqual([]);
         await expectAccessible(page, `${name} in ${theme} at ${viewport.width}px`);
       });
     }
