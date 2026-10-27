@@ -19,7 +19,7 @@ the October 2026 security fixes. Yarn 4.9.2 through Corepack.
 corepack enable
 yarn install
 cp apps/web/.env.example apps/web/.env.local   # then set NEXT_PUBLIC_REOWN_PROJECT_ID
-yarn dev                                       # the portal on :3000 and mock Atlas on :4747
+yarn dev                                       # the portal on :3000 and mock Atlas on :4848
 ```
 
 ## Checks

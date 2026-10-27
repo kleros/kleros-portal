@@ -15,9 +15,6 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[solidity]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
   "prettier.requireConfig": true,
   "prettier.useEditorConfig": false,
   "prettier.prettierPath": "./node_modules/prettier",

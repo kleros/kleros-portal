@@ -19,7 +19,7 @@ concurrency:
 
 env:
   NEXT_PUBLIC_REOWN_PROJECT_ID: ci-placeholder
-  NEXT_PUBLIC_ATLAS_URI: http://127.0.0.1:4747
+  NEXT_PUBLIC_ATLAS_URI: http://127.0.0.1:4848
 
 jobs:
   quality:
@@ -55,6 +55,10 @@ jobs:
 
       - name: Coverage floors
         run: yarn test:coverage
+
+      # what Netlify runs
+      - name: Production build
+        run: yarn build
 
   e2e:
     if: github.event_name != 'schedule'

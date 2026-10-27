@@ -6,7 +6,7 @@ Local Atlas stand-in for the web dev server and Playwright. Requires Node 22.23.
 yarn workspace @kleros-portal/mock-atlas start
 ```
 
-Set `NEXT_PUBLIC_ATLAS_URI=http://127.0.0.1:4747` in the web app. The server binds to loopback. `MOCK_ATLAS_PORT` overrides port `4747`; `MOCK_ATLAS_EMAIL_COOLDOWN_SECONDS` sets a non-negative email cooldown in seconds (default `0`). All state is in memory.
+Set `NEXT_PUBLIC_ATLAS_URI=http://127.0.0.1:4848` in the web app. The server binds to loopback. `MOCK_ATLAS_PORT` overrides port `4848`; `MOCK_ATLAS_EMAIL_COOLDOWN_SECONDS` sets a non-negative email cooldown in seconds (default `0`). All state is in memory.
 
 `createMockAtlasServer()` from `src/server.ts` creates an isolated server without listening. Tests call `server.listen(0, "127.0.0.1")` for an ephemeral port. The package entry point exports `DEFAULT_PORT`, `MOCK_ROLES`, and the product/topic enums and `PRODUCT_TOPIC_DEFAULTS` from `registry.ts`.
 

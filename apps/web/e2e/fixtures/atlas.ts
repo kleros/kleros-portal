@@ -1,4 +1,4 @@
-/** Its own port, so a mock Atlas another project left running on the default one is never reused. */
+/** mock-atlas's default port, off foresight's 4747 so a foresight mock left running is never reused. */
 export const MOCK_ATLAS_PORT = Number(process.env.E2E_MOCK_ATLAS_PORT ?? 4848);
 
 export const MOCK_ATLAS_URL = `http://127.0.0.1:${MOCK_ATLAS_PORT}`;

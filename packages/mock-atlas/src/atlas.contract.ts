@@ -256,7 +256,7 @@ export const atlasContract = (connect: (server: ReturnType<typeof createMockAtla
 
   describe("catalogue and dispatch", () => {
     it("exports the exact registry values/defaults and returns all 36 rows in Atlas order", async () => {
-      expect(DEFAULT_PORT).toBe(4747);
+      expect(DEFAULT_PORT).toBe(4848);
       expect(SignupProduct).toEqual({ CourtV1: "courtV1", CourtV2: "courtV2", PohV2: "pohV2", Foresight: "foresight" });
       const lowerFirst = (text: string) => text[0]!.toLowerCase() + text.slice(1);
       expect(PRODUCT_TOPIC_DEFAULTS).toEqual(

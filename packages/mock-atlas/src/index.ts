@@ -3,7 +3,7 @@ import type { IAtlasProvider } from "@kleros/kleros-app";
 type Role = NonNullable<IAtlasProvider["roleRestrictions"]>[number];
 
 /** Default port; override with MOCK_ATLAS_PORT. */
-export const DEFAULT_PORT = 4747;
+export const DEFAULT_PORT = 4848;
 
 /** Upload role restrictions, mirroring what the real Atlas serves. */
 export const MOCK_ROLES: Role[] = [
