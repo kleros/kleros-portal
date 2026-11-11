@@ -125,10 +125,10 @@ const resolve = async (store: Store, field: Field, prepared: ReturnType<typeof p
         email: settings.email,
         roles: ["user"],
         isEmailVerified: false,
-        emailUpdateableAt: "",
+        emailUpdateableAt: new Date(now(store)).toISOString(),
         lastEmailUpdatedAt: "",
       });
-      issueConfirmation(store, address!, settings.email);
+      issueConfirmation(store, address!, settings.email, false);
       return true;
     }
     case "updateEmail": {
@@ -139,7 +139,7 @@ const resolve = async (store: Store, field: Field, prepared: ReturnType<typeof p
           "TooFrequentEmailUpdateError",
           429,
         );
-      issueConfirmation(store, address!, args.newEmail as string);
+      issueConfirmation(store, address!, args.newEmail as string, true);
       return true;
     }
     case "confirmEmail": {

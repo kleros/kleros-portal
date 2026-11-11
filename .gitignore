@@ -11,6 +11,7 @@ node_modules/
 # build (repo-wide)
 dist/
 .next/
+.next-e2e/
 out/
 *.tsbuildinfo
 
@@ -37,3 +38,9 @@ packages/mock-atlas/.store/
 # mutation testing
 apps/web/reports/
 .stryker-tmp/
+
+# Local Netlify folder
+.netlify
+
+# Netlify CLI local build output
+.netlify/

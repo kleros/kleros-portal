@@ -60,6 +60,13 @@ jobs:
       - name: Production build
         run: yarn build
 
+      - name: The deployable build has no test wallet
+        run: |
+          if grep -rl "__connectTestWallet" apps/web/.next/static; then
+            echo "The test wallet is in the production bundle." >&2
+            exit 1
+          fi
+
   e2e:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
@@ -79,13 +86,15 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Install Chromium
-        run: yarn workspace web playwright install --with-deps chromium
+      - name: Install browsers
+        run: yarn workspace web playwright install --with-deps chromium firefox webkit
 
-      # Screenshot baselines are recorded on macOS and reviewed by a person; CI checks behaviour,
-      # layout geometry and accessibility.
+      # Against a production build with the security headers on; screenshot baselines are recorded on
+      # macOS and reviewed by a person, so CI checks behaviour, layout geometry and accessibility.
       - name: End-to-end tests
         run: yarn test:e2e --grep-invert @screenshot
+        env:
+          E2E_PROD: "1"
 
       - uses: actions/upload-artifact@v4
         if: failure()

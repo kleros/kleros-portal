@@ -3,12 +3,16 @@
   "globalEnv": ["CI", "NODE_ENV", "MOCK_ATLAS_PORT", "MOCK_ATLAS_EMAIL_COOLDOWN_SECONDS"],
   "globalPassThroughEnv": [
     "E2E_BASE_URL",
+    "E2E_PROD",
     "NODE_OPTIONS",
     "LANG",
     "E2E_MOCK_ATLAS_PORT",
     "E2E_APP_PORT",
     "REAL_ATLAS_URI",
-    "REAL_SENDGRID_MOCK"
+    "REAL_ATLAS_EMAIL_COOLDOWN",
+    "REAL_ATLAS_SESSION_SECONDS",
+    "REAL_SENDGRID_MOCK",
+    "NEXT_DIST_DIR"
   ],
   "tasks": {
     "build": {

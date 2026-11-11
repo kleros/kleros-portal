@@ -54,15 +54,23 @@ export const takeFault = (store: Store, field: string, product?: unknown) => {
   return fault.error;
 };
 
-export const issueConfirmation = (store: Store, address: string, email: string) => {
+/**
+ * Atlas starts the email cooldown on updateEmail only (signup.service.ts); a new signup leaves
+ * `lastEmailUpdatedAt` unset and reports `emailUpdateableAt` as the current time.
+ */
+export const issueConfirmation = (store: Store, address: string, email: string, startsCooldown: boolean) => {
   const key = address.toLowerCase();
   const timestamp = now(store);
   const user = store.users.get(key)!;
   Object.assign(user, {
     email,
     isEmailVerified: false,
-    lastEmailUpdatedAt: new Date(timestamp).toISOString(),
-    emailUpdateableAt: new Date(timestamp + store.emailCooldownSeconds * 1000).toISOString(),
+    ...(startsCooldown
+      ? {
+          lastEmailUpdatedAt: new Date(timestamp).toISOString(),
+          emailUpdateableAt: new Date(timestamp + store.emailCooldownSeconds * 1000).toISOString(),
+        }
+      : {}),
   });
   store.confirmations.set(key, {
     token: randomBytes(16).toString("hex"),

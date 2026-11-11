@@ -1,3 +1,7 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "API keys" };
+
 export default function ApiKeysPage() {
   return (
     <section

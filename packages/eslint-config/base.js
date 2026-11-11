@@ -13,6 +13,8 @@ export const config = [
       "**/node_modules/**",
       "**/dist/**",
       "**/.next/**",
+      "**/.next-e2e/**",
+      "**/.netlify/**",
       "**/out/**",
       "**/build/**",
       "**/generated/**",

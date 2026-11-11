@@ -1,19 +1,13 @@
-"use client";
+import type { Metadata } from "next";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import EmailConfirmationPage from "./_components/EmailConfirmationPage";
 
-import { EmailConfirmation } from "@/features/account/components/EmailConfirmation";
+export const metadata: Metadata = {
+  title: "Email confirmation",
+  referrer: "no-referrer",
+  robots: { index: false, follow: true },
+};
 
-function Confirmation() {
-  const params = useSearchParams();
-  return <EmailConfirmation address={params?.get("address") ?? undefined} token={params?.get("token") ?? undefined} />;
-}
-
-export default function EmailConfirmationPage() {
-  return (
-    <Suspense>
-      <Confirmation />
-    </Suspense>
-  );
+export default function Page() {
+  return <EmailConfirmationPage />;
 }

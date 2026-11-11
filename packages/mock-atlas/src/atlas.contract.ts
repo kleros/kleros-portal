@@ -687,17 +687,26 @@ export const atlasContract = (connect: (server: ReturnType<typeof createMockAtla
       expect(await confirm(address, pending.token)).toEqual({ data: { confirmEmail: confirmed } });
     });
 
-    it("enforces the configured cooldown without changing email, preferences or inbox on failure", async () => {
+    it("starts the cooldown on updateEmail, not signup, and refuses changes inside it", async () => {
       await stop();
       await start(60);
       const { address, token } = await signup();
       await update(token, "PohV2", [{ topic: "Rewards", enabled: true }]);
+      // Atlas: no lastEmailUpdatedAt after signup, so emailUpdateableAt is the current time
+      expect(await gql(queries.user, {}, token)).toEqual({
+        data: {
+          user: { email: "alice@example.com", isEmailVerified: false, emailUpdateableAt: new Date(NOW).toISOString() },
+        },
+      });
+      expect(await gql(queries.updateEmail, { newEmail: "first@example.com", product: "PohV2" }, token)).toEqual({
+        data: { updateEmail: true },
+      });
       const pending = await inbox(address);
       const before = await state();
       expect(await gql(queries.user, {}, token)).toEqual({
         data: {
           user: {
-            email: "alice@example.com",
+            email: "first@example.com",
             isEmailVerified: false,
             emailUpdateableAt: new Date(NOW + 60_000).toISOString(),
           },
@@ -965,7 +974,7 @@ export const atlasContract = (connect: (server: ReturnType<typeof createMockAtla
             email: "alice@example.com",
             isEmailVerified: false,
             emailUpdateableAt: DATE,
-            lastEmailUpdatedAt: DATE,
+            lastEmailUpdatedAt: "",
             roles: ["user"],
           },
         ],

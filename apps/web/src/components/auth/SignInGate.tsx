@@ -23,13 +23,12 @@ export function SignInGate({ children }: { children: ReactNode }) {
 
   const signIn = () => {
     setError(null);
-    authoriseUser().catch((cause: unknown) =>
-      setError(
-        isRejection(cause)
-          ? "You declined the signature in your wallet."
-          : `Sign-in failed: ${atlasErrorMessage(cause)}`,
-      ),
-    );
+    authoriseUser().catch((cause: unknown) => {
+      if (isRejection(cause)) return setError("You declined the signature in your wallet.");
+      // Atlas's messages ("Error fetching nonce") are not written for people; keep them for support
+      console.error("Sign-in failed:", atlasErrorMessage(cause));
+      setError("Sign-in did not go through. Check your connection and try again.");
+    });
   };
 
   return (

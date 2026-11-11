@@ -1,5 +1,29 @@
-/** @type {import('next').NextConfig} */
+import process from "node:process";
+
+import { securityHeaders } from "./src/config/securityHeaders.mjs";
+
+/** @satisfies {import('next').NextConfig} */
 const nextConfig = {
+  // the production-mode e2e build goes beside the real one, so it never overwrites a deployable .next
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders({
+          nodeEnv: process.env.NODE_ENV,
+          atlasUri: process.env.NEXT_PUBLIC_ATLAS_URI,
+        }),
+      },
+      {
+        source: "/email-confirmation",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [],
   },

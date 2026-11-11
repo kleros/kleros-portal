@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mock-atlas",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["mock-atlas"],
+      "port": 4848
+    },
+    {
+      "name": "portal",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["workspace", "web", "next", "dev", "-p", "3100"],
+      "port": 3100
+    }
+  ]
+}

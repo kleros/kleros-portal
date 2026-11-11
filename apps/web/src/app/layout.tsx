@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 
 import { AppProviders } from "@/components/providers/AppProviders";
@@ -9,9 +9,16 @@ import { siteConfig } from "@/config/site";
 import "@/styles/global.css";
 
 export const metadata: Metadata = {
-  title: siteConfig.name,
+  title: { default: siteConfig.name, template: "%s · Kleros Portal" },
   description: siteConfig.description,
   metadataBase: env.SITE_URL ? new URL(env.SITE_URL) : null,
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafbfc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f11" },
+  ],
 };
 
 // the same files the component harnesses load (e2e/harness/inter.css)

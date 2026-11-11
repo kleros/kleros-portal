@@ -66,8 +66,9 @@ it.each([
     new UserRejectedRequestError(new Error("User denied message signature.")),
     "You declined the signature in your wallet.",
   ],
-  [new Error("Nonce unavailable"), "Sign-in failed: Nonce unavailable"],
+  [new Error("Nonce unavailable"), "Sign-in did not go through. Check your connection and try again."],
 ])("shows the appropriate failure for %s", async (error, message) => {
+  vi.spyOn(console, "error").mockImplementation(() => {});
   atlas.authoriseUser.mockRejectedValue(error);
   render(gate);
   await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
@@ -76,10 +77,13 @@ it.each([
 });
 
 it("clears an old failure when sign-in is retried", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => {});
   atlas.authoriseUser.mockRejectedValueOnce(new Error("Offline")).mockResolvedValueOnce(undefined);
   render(gate);
   await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
-  expect(await screen.findByText("Sign-in failed: Offline", SHOWN)).toBeVisible();
+  expect(
+    await screen.findByText("Sign-in did not go through. Check your connection and try again.", SHOWN),
+  ).toBeVisible();
   await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
   expect(screen.getByRole("alert")).toBeEmptyDOMElement();
   expect(atlas.authoriseUser).toHaveBeenCalledTimes(2);

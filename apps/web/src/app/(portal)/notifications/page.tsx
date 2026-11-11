@@ -1,34 +1,11 @@
-"use client";
+import type { Metadata } from "next";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import NotificationsPage from "./_components/NotificationsPage";
 
-import { AddEmail } from "@/features/account/components/AddEmail";
-import { EmailCard } from "@/features/account/components/EmailCard";
-import { RemoveEmail } from "@/features/account/components/RemoveEmail";
-import { NotificationSettings } from "@/features/notifications/components/NotificationSettings";
+export const metadata: Metadata = {
+  title: "Notifications",
+};
 
-import { SignInGate } from "@/components/auth/SignInGate";
-
-function Notifications() {
-  const product = useSearchParams()?.get("product") ?? undefined;
-
-  return (
-    <SignInGate>
-      <NotificationSettings
-        requestedProduct={product}
-        noUser={<AddEmail />}
-        header={<EmailCard />}
-        dangerZone={<RemoveEmail />}
-      />
-    </SignInGate>
-  );
-}
-
-export default function NotificationsPage() {
-  return (
-    <Suspense>
-      <Notifications />
-    </Suspense>
-  );
+export default function Page() {
+  return <NotificationsPage />;
 }

@@ -1,14 +1,10 @@
-import { expect, test as base, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { atlas } from "../fixtures/atlas";
-import { WalletFixture } from "../fixtures/wallet";
+import { expect, test } from "../fixtures/test";
+import type { WalletFixture } from "../fixtures/wallet";
 import { expectAccessible } from "../utils/a11y";
-
-const test = base.extend<{ wallet: WalletFixture }>({
-  wallet: async ({ page }, use) => {
-    await use(new WalletFixture(page));
-  },
-});
+import { flip } from "../utils/switches";
 
 test.beforeEach(async () => {
   await atlas.reset();
@@ -84,7 +80,9 @@ test("flow 4: the emailed link confirms; an old or wrong link says so", async ({
   await signUp(page, wallet);
   const { token } = await atlas.confirmation(wallet.address);
 
-  await page.goto(`/email-confirmation?address=${wallet.address}&token=0${token.slice(1)}`);
+  // any other first hex digit; a fixed "0" would equal the real token one time in sixteen
+  const wrong = `${token.startsWith("0") ? "1" : "0"}${token.slice(1)}`;
+  await page.goto(`/email-confirmation?address=${wallet.address}&token=${wrong}`);
   await expect(page.getByRole("heading", { name: "This link does not work" })).toBeVisible();
 
   await page.goto(`/email-confirmation?address=${wallet.address}&token=${token}`);
@@ -128,7 +126,7 @@ test("flow 6: a toggle saves at once, survives a reload, and a failed save rolls
 
   const drawn = page.getByRole("switch", { name: "I'm drawn as a juror" });
   await expect(drawn).toBeChecked();
-  await drawn.click({ force: true });
+  await flip(drawn);
   await expect(drawn).not.toBeChecked();
   await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
 
@@ -145,7 +143,7 @@ test("flow 6: a toggle saves at once, survives a reload, and a failed save rolls
 
   await atlas.fault({ field: "updateNotificationSubscriptions", product: "CourtV2" });
   const vote = page.getByRole("switch", { name: "It's time to vote" });
-  await vote.click({ force: true });
+  await flip(vote);
   await expect(page.getByRole("status").filter({ hasText: "Not saved. Try again" })).toBeVisible();
   await expect(vote).toBeChecked();
   await expectAccessible(page, "save failed");
@@ -156,7 +154,7 @@ test("flow 6b: a group switch writes only the topics that change", async ({ page
   await wallet.revisit("/notifications?product=PohV2");
 
   const disputes = page.getByRole("switch", { name: "All challenges emails" });
-  await disputes.click({ force: true });
+  await flip(disputes);
   await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
   const [update] = await atlas.requestsTo("updateNotificationSubscriptions");
   expect(update?.variables).toEqual({
@@ -233,4 +231,13 @@ test("API keys is reserved and says it is coming", async ({ page }) => {
   await page.goto("/api-keys");
   await expect(page.getByRole("heading", { name: "API keys are coming" })).toBeVisible();
   await expectAccessible(page, "api keys");
+});
+
+test("the wallet modal opens on its connect view", async ({ page }) => {
+  await page.goto("/notifications");
+  await page.getByRole("button", { name: "Connect wallet" }).first().click();
+  // phones get a different wallet list, so only the view's own title is common to every engine
+  await expect(page.locator("w3m-modal").getByText("Connect Wallet", { exact: true })).toBeVisible({
+    timeout: 20_000,
+  });
 });

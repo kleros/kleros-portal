@@ -20,7 +20,7 @@ export function SaveStatusPill() {
     <p
       role="status"
       aria-live="polite"
-      className="bg-klerosUIComponentsLightGrey rounded-base flex w-[232px] shrink-0 items-center gap-2 px-3 py-1.5 text-sm whitespace-nowrap"
+      className="border-klerosUIComponentsStroke bg-klerosUIComponentsLightBackground rounded-base flex w-[232px] shrink-0 items-center gap-2 border px-3 py-1.5 text-sm whitespace-nowrap"
     >
       <StatusIcon name={icon} />
       {text}
