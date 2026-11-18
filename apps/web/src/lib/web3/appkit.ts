@@ -17,7 +17,8 @@ export const getAppKit = () =>
     metadata: {
       name: siteConfig.name,
       description: siteConfig.description,
-      url: env.SITE_URL ?? "http://localhost:3000",
+      // wallets compare this with the page origin; the server render never reaches a wallet
+      url: env.SITE_URL ?? (typeof window === "undefined" ? "http://localhost:3000" : window.location.origin),
       icons: [],
     },
     enableCoinbase: false,
