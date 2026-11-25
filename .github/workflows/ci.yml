@@ -96,7 +96,7 @@ jobs:
         env:
           E2E_PROD: "1"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
@@ -133,7 +133,7 @@ jobs:
       - name: Mutation tests
         run: yarn test:mutation ${{ github.event_name != 'pull_request' && '--force' || '' }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: mutation-report
