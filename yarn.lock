@@ -2876,7 +2876,7 @@ __metadata:
     eslint-plugin-import-x: "npm:^4.17.1"
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-hooks: "npm:^5.2.0"
-    eslint-plugin-turbo: "npm:^2.7.1"
+    eslint-plugin-turbo: "npm:^2.11.13"
     globals: "npm:^16.2.0"
     turbo: "npm:^2.7.1"
     typescript: "npm:^5.8.3"
@@ -8059,15 +8059,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-turbo@npm:^2.7.1":
-  version: 2.10.4
-  resolution: "eslint-plugin-turbo@npm:2.10.4"
+"eslint-plugin-turbo@npm:^2.11.13":
+  version: 2.11.13
+  resolution: "eslint-plugin-turbo@npm:2.11.13"
   dependencies:
     dotenv: "npm:16.0.3"
   peerDependencies:
     eslint: ">6.6.0"
     turbo: ">2.0.0"
-  checksum: 10c0/47459ac685a4f38ed18c1d0c1fc2d9d715f510af38f98615376cd1233cd13c07ade9eedf5fa0f5335975469f9b71ebaf35124506089e4fea630aafcf2085e8c8
+  checksum: 10c0/0ffa0f61f56f348a927f77c1f4d4329129b90129099dc325e44a96beb3e264f8a1cb94a118ac8dd29cf1de14dc535a2bcde5c127919dcc95236d41521085f105
   languageName: node
   linkType: hard
 
