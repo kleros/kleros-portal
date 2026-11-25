@@ -123,7 +123,7 @@ jobs:
         run: yarn install --immutable
 
       # Pull requests reuse the last result and test only changed mutants; the nightly run starts clean.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: github.event_name == 'pull_request'
         with:
           path: apps/web/reports/stryker-incremental.json
