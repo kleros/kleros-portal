@@ -16,6 +16,10 @@ export const paths = {
   emailConfirmation: {
     getHref: () => "/email-confirmation",
   },
+  /** PROTOTYPE, throwaway: where Descope's External Authentication action sends the browser. */
+  descopeLoginPrototype: {
+    getHref: () => "/prototype/descope-login",
+  },
 } as const;
 
 /**

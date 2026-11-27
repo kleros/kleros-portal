@@ -24,6 +24,14 @@ const nextConfig = {
       },
     ];
   },
+  // PROTOTYPE, throwaway: the Descope test project's External Auth URL is fixed at http://localhost:8788/login.
+  // `PROTOTYPE_DESCOPE_LOGIN_ALIAS=/login yarn next dev -p 8788` answers it there; dev server only.
+  async rewrites() {
+    const alias = process.env.PROTOTYPE_DESCOPE_LOGIN_ALIAS;
+    return process.env.NODE_ENV === "development" && alias
+      ? [{ source: alias, destination: "/prototype/descope-login" }]
+      : [];
+  },
   images: {
     remotePatterns: [],
   },

@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 import { MOCK_ATLAS_PORT, MOCK_ATLAS_URL } from "./e2e/fixtures/atlas";
+import { DESCOPE_STUB_PORT } from "./e2e/fixtures/descope";
 
 /** Off the default 3000 so a dev server already running there is never mistaken for this one. */
 const APP_PORT = Number(process.env.E2E_APP_PORT ?? 3100);
@@ -49,6 +50,10 @@ export default defineConfig({
         ...(PROD ? { NEXT_PUBLIC_E2E_TEST_WALLET: "true", NEXT_DIST_DIR: ".next-e2e" } : {}),
         NEXT_PUBLIC_ATLAS_URI: MOCK_ATLAS_URL,
         NEXT_PUBLIC_REOWN_PROJECT_ID: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ?? "e2e-placeholder",
+        // PROTOTYPE, throwaway: server-only settings for the Descope hand-off route, aimed at the spec's stub.
+        DESCOPE_PROJECT_ID: "P2e2eprototype",
+        DESCOPE_MANAGEMENT_KEY: "e2e-management-key",
+        DESCOPE_BASE_URL: `http://127.0.0.1:${DESCOPE_STUB_PORT}`,
       },
     },
   ],

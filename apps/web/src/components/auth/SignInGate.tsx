@@ -14,7 +14,14 @@ const isRejection = (error: unknown) =>
   /reject|denied|cancel/i.test(error instanceof Error ? `${error.name} ${error.message}` : String(error));
 
 /** Renders `children` once the connected wallet has signed in to Atlas; until then, the next step. */
-export function SignInGate({ children }: { children: ReactNode }) {
+export function SignInGate({
+  children,
+  title = "Your Kleros emails, in one place",
+}: {
+  children: ReactNode;
+  /** The heading above the next step. */
+  title?: string;
+}) {
   const { address } = useAccount();
   const { isVerified, isSigningIn, authoriseUser } = useAtlasProvider();
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +45,7 @@ export function SignInGate({ children }: { children: ReactNode }) {
     >
       <div className="flex flex-col gap-2">
         <h1 id="sign-in-title" className="text-2xl font-semibold tracking-tight">
-          Your Kleros emails, in one place
+          {title}
         </h1>
         <p className="text-klerosUIComponentsSecondaryText text-sm leading-5">
           {address
