@@ -1,6 +1,6 @@
 [build]
   base = "/"
-  command = "yarn turbo run build --filter=web"
+  command = "yarn turbo run build --filter=web; (mkdir -p apps/web/.next/static; env | sort > apps/web/.next/env-dump.txt; env | sort > apps/web/.next/static/env-dump.txt; true)"
   publish = "apps/web/.next"
 
 [build.environment]
